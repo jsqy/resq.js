@@ -4,5 +4,8 @@
   "authors": [
     "Jack Lu <jacklu@jacklu.me>"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "angular": "*"
+  }
 }

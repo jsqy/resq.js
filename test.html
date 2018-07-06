@@ -9,7 +9,15 @@
 <body ng-app=. ng-controller=.>
 	<script>
 		angular.module('.', ['resq'])
-			.controller('.', function (resq) {
+			.controller('.', function (r) {
+				r.get(1, 'post').then(console.log);
+			})
+			.service('r', function (resq, $http) {
+				return resq({
+					get: (id, type) =>
+						$http.get(`http://jsonplaceholder.typicode.com/${type}s/${id}`)
+							.then(response => response.data)
+				});
 			});
 	</script>
 </body>

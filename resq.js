@@ -1,5 +1,5 @@
 angular.module('resq', [])
-	.service('resq', function () {
+	.service('resq', function ($q) {
 		return function (config) {
 			return {
 				get: function (id, type) {
@@ -14,46 +14,67 @@ angular.module('resq', [])
 							}) :
 						config.get(id, type);
 				},
-				join: function (type) {
-					var $this = this;
-					return function (id) {
-						var type0 = type;
-						var id0 = id;
-						while (typeof type != 'string') {
-							for (var i in type) break;
-							type = type[i];
-							id = id[i];
-						}
-						return id instanceof Array ?
-							$this.get(id, type)
-								.then(function (object) {
-									if (object instanceof Array)
-										for (var i in id)
-											id[i] = object[i];
+				join: function (schema) {
+					return function (object) {
+						var queue = {};
+						object = { $: object };
+						schema = { $: schema };
+						collect(object, schema);
+						return flush().finally(function () {
+							object = object.$;
+							schema = schema.$;
+						}).then(function () {
+							return object;
+						});
+						function collect(object, schema) {
+							if (angular.isArray(schema)) {
+								var schema = schema[0];
+								object.forEach(
+									typeof schema == 'string' ?
+										function (element, i) {
+											enqueue(element, schema, object, i);
+										} :
+										function (element) {
+											collect(element, schema);
+										}
+								);
+							} else if (angular.isObject(schema))
+								angular.forEach(schema, function (value, key) {
+									if (typeof value == 'string')
+										enqueue(object[key], value, object, key);
 									else
-										for (var i in id)
-											id[i] = object[id[i]];
-									return id0;
-								}) :
-							$this.get(id, type)
-								.then(function (object) {
-									if (id == id0)
-										return object;
-									else {
-										type = type0;
-										id = id0;
-										if (typeof type != 'string')
-											for (; ;) {
-												for (var i in type) break;
-												type = type[i];
-												if (typeof type == 'string')
-													break;
-												id = id[i];
-											}
-										id[i] = object;
-										return id0;
-									};
+										collect(object[key], value);
 								});
+						}
+						function flush() {
+							var request = {};
+							for (var type in queue)
+								request[type] = config.get(queue[type].map(function (request) { return request.id; }), type);
+							return $q.all(request)
+								.then(function (object) {
+									angular.forEach(object, function (object, type) {
+										queue[type].forEach(
+											object instanceof Array ?
+												function (request, i) {
+													request.object[request.i] = object[i];
+												} :
+												function (request) {
+													request.object[request.i] = object[request.id];
+												}
+										);
+									});
+								});
+						};
+						function enqueue(id, type, object, i) {
+							var request = {
+								id: id,
+								type: type,
+								object: object,
+								i: i
+							};
+							if (!queue[type]) queue[type] = [];
+							queue[type].push(request);
+						};
 					};
 				}
 			};

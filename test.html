@@ -13,9 +13,7 @@
 				r.get(1, 'post').then(console.log);
 				r.get([1, 2], 'user').then(console.log);
 				$q.resolve(1).then(r.join('post')).then(console.log);
-				$q.resolve([1, 2]).then(r.join('user')).then(console.log);
-				$q.resolve({ a: { b: 1 } }).then(r.join({ a: { b: 'post' } })).then(console.log);
-				$q.resolve({ a: { b: [1, 2] } }).then(r.join({ a: { b: 'user' } })).then(console.log);
+				$q.resolve({ a: 1, b: [1, 2] }).then(r.join({ a: 'post', b: ['user'] })).then(console.log);
 			})
 			.service('r', function (resq, $http) {
 				return resq({

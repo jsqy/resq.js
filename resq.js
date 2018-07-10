@@ -16,7 +16,7 @@ angular.module('resq', [])
 				},
 				join: function (schema) {
 					return function (object) {
-						var queue = {};
+						var queue = [];
 						object = { $: object };
 						schema = { $: schema };
 						collect(object, schema);
@@ -47,13 +47,14 @@ angular.module('resq', [])
 								});
 						}
 						function flush() {
-							var request = {};
-							for (var type in queue)
-								request[type] = config.get(queue[type].map(function (request) { return request.id; }), type);
-							return $q.all(request)
+							var request = group.call(queue, function (request) { return request.type; });
+							var promise = {};
+							for (var type in request)
+								promise[type] = config.get(request[type].map(function (request) { return request.id; }), type);
+							return $q.all(promise)
 								.then(function (object) {
 									angular.forEach(object, function (object, type) {
-										queue[type].forEach(
+										request[type].forEach(
 											object instanceof Array ?
 												function (request, i) {
 													request.object[request.i] = object[i];
@@ -72,11 +73,21 @@ angular.module('resq', [])
 								object: object,
 								i: i
 							};
-							if (!queue[type]) queue[type] = [];
-							queue[type].push(request);
+							queue.push(request);
 						};
 					};
 				}
 			};
 		};
+		function group(key) {
+			var object = {};
+			for (var i in this) {
+				var value = this[i];
+				var k = key(value);
+				if (!object[k])
+					object[k] = [];
+				object[k].push(value);
+			}
+			return object;
+		}
 	});

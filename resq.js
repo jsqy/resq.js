@@ -73,7 +73,7 @@ angular.module('resq', [])
 										);
 									});
 								});
-						};
+						}
 						function enqueue(id, type, object, i) {
 							var request = {
 								id: id,
@@ -82,7 +82,7 @@ angular.module('resq', [])
 								i: i
 							};
 							queue.push(request);
-						};
+						}
 					};
 				}
 			};

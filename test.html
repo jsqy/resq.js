@@ -14,6 +14,7 @@
 				r.get([1, 2], 'user').then(console.log);
 				$q.resolve(1).then(r.join('post')).then(console.log);
 				$q.resolve({ a: 1, b: [1, 2] }).then(r.join({ a: 'post', b: ['user'] })).then(console.log);
+				$q.resolve(["post.1", "user.1"]).then(r.join([object => (component => ({ id: component[1], type: component[0] }))(object.split('.'))])).then(console.log);
 			})
 			.service('r', function (resq, $http) {
 				return resq({

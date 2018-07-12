@@ -34,15 +34,23 @@ angular.module('resq', [])
 										function (element, i) {
 											enqueue(element, schema, object, i);
 										} :
-										function (element) {
-											collect(element, schema);
-										}
+										angular.isFunction(schema) ?
+											function (element, i) {
+												var reference = schema(element);
+												enqueue(reference.id, reference.type, object, i);
+											} :
+											function (element) {
+												collect(element, schema);
+											}
 								);
 							} else if (angular.isObject(schema))
 								angular.forEach(schema, function (value, key) {
 									if (typeof value == 'string')
 										enqueue(object[key], value, object, key);
-									else
+									else if (angular.isFunction(value)) {
+										var reference = value(object[key]);
+										enqueue(reference.id, reference.type, object, key);
+									} else
 										collect(object[key], value);
 								});
 						}

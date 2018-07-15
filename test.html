@@ -13,17 +13,34 @@
 				r.get(1, 'post').then(console.log);
 				r.get([1, 2], 'user').then(console.log);
 				$q.resolve(1).then(r.join('post')).then(console.log);
-				$q.resolve({ a: 1, b: [1, 2] }).then(r.join({ a: 'post', b: ['user'] })).then(console.log);
+				$q.resolve({ a: 1, b: [1, 2] })
+					.then(r.join({ a: 'post', b: ['user'] }))
+					.then(r.join({
+						a: {
+							reference: object => ({ id: object.id, type: 'post' }),
+							x: "/x",
+							y: "/y"
+						},
+						b: [{
+							reference: object => ({ id: object.id, type: 'user' }),
+							x: "/x"
+						}]
+					}))
+					.then(console.log);
 				$q.resolve(["post.1", "user.1"]).then(r.join([object => (component => ({ id: component[1], type: component[0] }))(object.split('.'))])).then(console.log);
 			})
-			.service('r', function (resq, $http) {
+			.service('r', function (resq, $http, $q) {
 				return resq({
-					get: (id, type) =>
-						id instanceof Array ?
-							$http.get(`http://jsonplaceholder.typicode.com/${type}s?${id.map(id => `id=${id}`).join('&')}`)
-								.then(response => response.data) :
-							$http.get(`http://jsonplaceholder.typicode.com/${type}s/${id}`)
-								.then(response => response.data)
+					get: (id, type, relation) =>
+						relation ?
+							id instanceof Array ?
+								$q.resolve(id.map((v, i) => `/${type}/${v}/${relation}`)) :
+								$q.resolve(`/${type}/${id}/${relation}`) :
+							id instanceof Array ?
+								$http.get(`http://jsonplaceholder.typicode.com/${type}s?${id.map(id => `id=${id}`).join('&')}`)
+									.then(response => response.data) :
+								$http.get(`http://jsonplaceholder.typicode.com/${type}s/${id}`)
+									.then(response => response.data)
 				});
 			});
 	</script>

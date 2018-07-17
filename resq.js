@@ -28,7 +28,11 @@ angular.module('resq', [])
 						});
 						function collect(object, schema) {
 							if (angular.isArray(schema)) {
+								if (typeof schema[0] != 'object')
+									schema[0] = [schema[0], {}];
 								var schema = schema[0];
+								if (schema instanceof Array && schema.length == 2)
+									schema = schema[0];
 								object.forEach(
 									typeof schema == 'string' ?
 										function (element, i) {
@@ -49,6 +53,10 @@ angular.module('resq', [])
 									var reference = reference(object);
 								angular.forEach(schema, function (value, key) {
 									if (key == "reference" && angular.isFunction(value)) return;
+									if (typeof value != 'object')
+										schema[key] = value = [value, {}];
+									if (value instanceof Array && value.length == 2)
+										value = value[0];
 									if (typeof value == 'string')
 										if (value[0] == '/') {
 											var relation = value.substr(1);

@@ -17,10 +17,13 @@ angular.module('resq', [])
 				join: function (schema) {
 					return function (object) {
 						var queue = [];
+						var pending = 0;
 						object = { $: object };
 						schema = { $: schema };
+						var deferred = $q.defer();
 						collect(object, schema);
-						return flush().finally(function () {
+						flush();
+						return deferred.promise.finally(function () {
 							object = object.$;
 							schema = schema.$;
 						}).then(function () {
@@ -31,17 +34,19 @@ angular.module('resq', [])
 								if (typeof schema[0] != 'object')
 									schema[0] = [schema[0], {}];
 								var schema = schema[0];
-								if (schema instanceof Array && schema.length == 2)
+								if (schema instanceof Array && schema.length == 2) {
+									var then = schema[1];
 									schema = schema[0];
+								}
 								object.forEach(
 									typeof schema == 'string' ?
 										function (element, i) {
-											enqueue(element, schema, undefined, object, i);
+											enqueue(element, schema, undefined, object, i, then);
 										} :
 										angular.isFunction(schema) ?
 											function (element, i) {
 												var reference = schema(element);
-												enqueue(reference.id, reference.type, undefined, object, i);
+												enqueue(reference.id, reference.type, undefined, object, i, then);
 											} :
 											function (element) {
 												collect(element, schema);
@@ -55,16 +60,18 @@ angular.module('resq', [])
 									if (key == "reference" && angular.isFunction(value)) return;
 									if (typeof value != 'object')
 										schema[key] = value = [value, {}];
-									if (value instanceof Array && value.length == 2)
+									if (value instanceof Array && value.length == 2) {
+										var then = value[1];
 										value = value[0];
+									}
 									if (typeof value == 'string')
 										if (value[0] == '/') {
 											var relation = value.substr(1);
-											enqueue(reference.id, reference.type, relation, object, key);
+											enqueue(reference.id, reference.type, relation, object, key, then);
 										} else
-											enqueue(object[key], value, undefined, object, key);
+											enqueue(object[key], value, undefined, object, key, then);
 									else if (angular.isFunction(value)) (function (reference) {
-										enqueue(reference.id, reference.type, undefined, object, key);
+										enqueue(reference.id, reference.type, undefined, object, key, then);
 									})(value(object[key]));
 									else
 										collect(object[key], value);
@@ -80,34 +87,50 @@ angular.module('resq', [])
 							var promise = {};
 							for (var relation in request) {
 								promise[relation] = {};
-								for (var type in request[relation])
+								for (var type in request[relation]) {
 									promise[relation][type] =
 										config.get(request[relation][type].map(function (request) { return request.id; }), type, relation);
+									pending++;
+								}
 							}
-							return all(promise)
-								.then(function (object) {
-									angular.forEach(object, function (object, relation) {
-										angular.forEach(object, function (object, type) {
-											request[relation][type].forEach(
-												object instanceof Array ?
-													function (request, i) {
-														request.object[request.i] = object[i];
-													} :
-													function (request) {
-														request.object[request.i] = object[request.id];
-													}
-											);
-										});
-									});
+							angular.forEach(promise, function (promise, relation) {
+								angular.forEach(promise, function (promise, type) {
+									promise.finally(function () {
+										pending--;
+									}).then(function (object) {
+										request[relation][type].forEach(
+											object instanceof Array ?
+												function (request, i) {
+													request.object[request.i] = object[i];
+												} :
+												function (request) {
+													request.object[request.i] = object[request.id];
+												}
+										);
+										request[relation][type].forEach(
+											object instanceof Array ?
+												function (request, i) {
+													collect(object[i], request.then);
+												} :
+												function (request) {
+													collect(object[request.id], request.then);
+												}
+										);
+										flush();
+										if (!pending) deferred.resolve();
+									}, deferred.reject);
 								});
+							});
+							queue.length = 0;
 						}
-						function enqueue(id, type, relation, object, i) {
+						function enqueue(id, type, relation, object, i, then) {
 							var request = {
 								id: id,
 								type: type,
 								relation: relation,
 								object: object,
-								i: i
+								i: i,
+								then: then
 							};
 							queue.push(request);
 						}

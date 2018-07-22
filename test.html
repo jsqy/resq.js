@@ -16,12 +16,10 @@
 				$q.resolve({ a: 1, b: [1, 2] })
 					.then(r.join({
 						a: ['post', {
-							reference: object => ({ id: object.id, type: 'post' }),
 							x: "/x",
 							y: "/y"
 						}],
 						b: [['user', {
-							reference: object => ({ id: object.id, type: 'user' }),
 							x: "/x"
 						}]]
 					}))

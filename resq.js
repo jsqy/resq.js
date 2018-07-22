@@ -53,11 +53,7 @@ angular.module('resq', [])
 											}
 								);
 							} else if (angular.isObject(schema)) {
-								var reference = schema["reference"];
-								if (reference && angular.isFunction(reference))
-									var reference = reference(object);
 								angular.forEach(schema, function (value, key) {
-									if (key == "reference" && angular.isFunction(value)) return;
 									if (typeof value != 'object')
 										schema[key] = value = [value, {}];
 									if (value instanceof Array && value.length == 2) {
@@ -67,7 +63,7 @@ angular.module('resq', [])
 									if (typeof value == 'string')
 										if (value[0] == '/') {
 											var relation = value.substr(1);
-											enqueue(reference.id, reference.type, relation, object, key, then);
+											enqueue(object.$id, object.$type, relation, object, key, then);
 										} else
 											enqueue(object[key], value, undefined, object, key, then);
 									else if (angular.isFunction(value)) (function (reference) {
@@ -110,9 +106,13 @@ angular.module('resq', [])
 										request[relation][type].forEach(
 											object instanceof Array ?
 												function (request, i) {
+													object[i].$id = request.id;
+													object[i].$type = request.type;
 													collect(object[i], request.then);
 												} :
 												function (request) {
+													object[request.id].$id = request.id;
+													object[request.id].$type = request.type;
 													collect(object[request.id], request.then);
 												}
 										);

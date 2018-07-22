@@ -64,8 +64,14 @@ angular.module('resq', [])
 										if (value[0] == '/') {
 											var relation = value.substr(1);
 											enqueue(object.$id, object.$type, relation, object, key, then);
-										} else
-											enqueue(object[key], value, undefined, object, key, then);
+										} else {
+											var a = value.match(/\S+/g);
+											if (a[1] == 'as') {
+												value = a[0];
+												var as = a[2];
+											}
+											enqueue(object[key], value, undefined, object, as ? as : key, then);
+										}
 									else if (angular.isFunction(value)) (function (reference) {
 										enqueue(reference.id, reference.type, undefined, object, key, then);
 									})(value(object[key]));

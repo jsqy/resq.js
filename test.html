@@ -25,7 +25,7 @@
 						}]]
 					}))
 					.then(console.log);
-				$q.resolve(["post.1", "user.1"]).then(r.join([object => (component => ({ id: component[1], type: component[0] }))(object.split('.'))])).then(console.log);
+				$q.resolve(["post.1", "user.1"]).then(r.join([])).then(console.log);
 			})
 			.service('r', function (resq, $http, $q) {
 				return resq({
@@ -38,7 +38,8 @@
 								$http.get(`http://jsonplaceholder.typicode.com/${type}s?${id.map(id => `id=${id}`).join('&')}`)
 									.then(response => response.data) :
 								$http.get(`http://jsonplaceholder.typicode.com/${type}s/${id}`)
-									.then(response => response.data)
+									.then(response => response.data),
+					parseReference: object => (component => ({ id: component[1], type: component[0] }))(object.split('.'))
 				});
 			});
 	</script>

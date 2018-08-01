@@ -43,9 +43,9 @@ angular.module('resq', [])
 										function (element, i) {
 											enqueue(element, schema, undefined, object, i, then);
 										} :
-										angular.isFunction(schema) ?
+										!schema ?
 											function (element, i) {
-												var reference = schema(element);
+												var reference = config.parseReference(element);
 												enqueue(reference.id, reference.type, undefined, object, i, then);
 											} :
 											function (element) {
@@ -72,9 +72,9 @@ angular.module('resq', [])
 											}
 											enqueue(object[key], value, undefined, object, as ? as : key, then);
 										}
-									else if (angular.isFunction(value)) (function (reference) {
+									else if (!value) (function (reference) {
 										enqueue(reference.id, reference.type, undefined, object, key, then);
-									})(value(object[key]));
+									})(config.parseReference(object[key]));
 									else
 										collect(object[key], value);
 								});

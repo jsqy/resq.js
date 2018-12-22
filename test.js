@@ -1,6 +1,7 @@
 var q = require('q');
 require('any-promise/register/q');
-var r = require('./jsonplaceholder');
+var JSONPlaceholder = require('./JSONPlaceholder');
+var r = JSONPlaceholder("http://jsonplaceholder.typicode.com");
 r.get(1, 'post').then(console.log);
 r.get([1, 2], 'user').then(console.log);
 q.resolve(1).then(r.join('post')).then(console.log);

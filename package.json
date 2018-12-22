@@ -10,6 +10,10 @@
   },
   "devDependencies": {
     "request": "*",
-    "request-promise-any": "*"
+    "request-promise-any": "*",
+    "mocha": "^5.2.0"
+  },
+  "scripts": {
+    "test": "mocha"
   }
 }

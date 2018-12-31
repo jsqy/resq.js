@@ -1,5 +1,7 @@
 var q = require('q');
 module.exports = config => ({
+	get config() { return config; },
+	set config(value) { config = value; },
 	get: (id, type, relation) =>
 		id instanceof Array ?
 			config.get(id, type, relation)

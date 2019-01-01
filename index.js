@@ -18,7 +18,7 @@ module.exports = config => ({
 			object = { $: object };
 			schema = { $: schema };
 			q.resolve().then(() => {
-				collect(object, schema);
+				promise.$$ = collect(object, schema);
 				flush();
 			});
 			var deferred = q.defer();
@@ -26,6 +26,7 @@ module.exports = config => ({
 			Object.defineProperty(promise, '$', { get: () => object.$ });
 			return promise;
 			function collect(object, schema) {
+				var promise = [];
 				if (schema instanceof Array) {
 					var schema = schema[0];
 					if (typeof schema != 'object')
@@ -37,18 +38,19 @@ module.exports = config => ({
 					object.forEach(
 						typeof schema == 'string' ?
 							(element, i) => {
-								enqueue(element, schema, undefined, object, i, then);
+								promise[i] = enqueue(element, schema, undefined, object, i, then);
 							} :
 							!schema ?
 								(element, i) => {
 									var reference = config.parseReference(element);
-									enqueue(reference.id, reference.type, undefined, object, i, then);
+									promise[i] = enqueue(reference.id, reference.type, undefined, object, i, then);
 								} :
 								element => {
-									collect(element, schema);
+									promise[i] = collect(element, schema);
 								}
 					);
 				} else if (typeof schema == 'object') {
+					var promise = {};
 					forEach(schema, (value, key) => {
 						if (typeof value != 'object')
 							value = [value, {}];
@@ -59,22 +61,23 @@ module.exports = config => ({
 						if (typeof value == 'string')
 							if (value[0] == '/') {
 								var relation = value.substr(1);
-								enqueue(object.$id, object.$type, relation, object, key, then);
+								promise[key] = enqueue(object.$id, object.$type, relation, object, key, then);
 							} else {
 								var a = value.match(/\S+/g);
 								if (a[1] == 'as') {
 									value = a[0];
 									var as = a[2];
 								}
-								enqueue(object[key], value, undefined, object, as ? as : key, then);
+								promise[key] = enqueue(object[key], value, undefined, object, as ? as : key, then);
 							}
 						else if (!value) (reference => {
-							enqueue(reference.id, reference.type, undefined, object, key, then);
+							promise[key] = enqueue(reference.id, reference.type, undefined, object, key, then);
 						})(config.parseReference(object[key]));
 						else
-							collect(object[key], value);
+							promise[key] = collect(object[key], value);
 					});
 				}
+				return promise;
 			}
 			function flush() {
 				var request = group.call(queue, [
@@ -99,9 +102,11 @@ module.exports = config => ({
 							request[relation][type].forEach(
 								object instanceof Array ?
 									(request, i) => {
+										request.deferred.resolve(object[i]);
 										request.object[request.i] = object[i];
 									} :
 									request => {
+										request.deferred.resolve(object[request.id]);
 										request.object[request.i] = object[request.id];
 									}
 							);
@@ -110,12 +115,12 @@ module.exports = config => ({
 									(request, i) => {
 										object[i].$id = request.id;
 										object[i].$type = request.type;
-										collect(object[i], request.then);
+										Object.assign(request.deferred.promise, collect(object[i], request.then));
 									} :
 									request => {
 										object[request.id].$id = request.id;
 										object[request.id].$type = request.type;
-										collect(object[request.id], request.then);
+										Object.assign(request.deferred.promise, collect(object[request.id], request.then));
 									}
 							);
 							flush();
@@ -127,15 +132,18 @@ module.exports = config => ({
 				deferred.notify();
 			}
 			function enqueue(id, type, relation, object, i, then) {
+				var deferred = q.defer();
 				var request = {
 					id: id,
 					type: type,
 					relation: relation,
 					object: object,
 					i: i,
-					then: then
+					then: then,
+					deferred
 				};
 				queue.push(request);
+				return deferred.promise;
 			}
 		}
 });

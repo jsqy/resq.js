@@ -28,9 +28,9 @@ module.exports = config => ({
 			);
 			function collect(object, schema) {
 				if (schema instanceof Array) {
-					if (typeof schema[0] != 'object')
-						schema[0] = [schema[0], {}];
 					var schema = schema[0];
+					if (typeof schema != 'object')
+						schema = [schema, {}];
 					if (schema instanceof Array && schema.length == 2) {
 						var then = schema[1];
 						schema = schema[0];
@@ -52,7 +52,7 @@ module.exports = config => ({
 				} else if (typeof schema == 'object') {
 					forEach(schema, (value, key) => {
 						if (typeof value != 'object')
-							schema[key] = value = [value, {}];
+							value = [value, {}];
 						if (value instanceof Array && value.length == 2) {
 							var then = value[1];
 							value = value[0];

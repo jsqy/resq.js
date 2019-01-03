@@ -17,9 +17,11 @@ module.exports = config => ({
 			var pending = 0;
 			object = { $: object };
 			schema = { $: schema };
+			q.resolve().then(() => {
+				collect(object, schema);
+				flush();
+			});
 			var deferred = q.defer();
-			collect(object, schema);
-			flush();
 			return deferred.promise.finally(() => {
 				object = object.$;
 				schema = schema.$;

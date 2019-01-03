@@ -127,6 +127,7 @@ module.exports = config => ({
 					});
 				});
 				queue.length = 0;
+				deferred.notify();
 			}
 			function enqueue(id, type, relation, object, i, then) {
 				var request = {

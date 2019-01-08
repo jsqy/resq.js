@@ -22,7 +22,9 @@ module.exports = config => ({
 				flush();
 			});
 			var deferred = q.defer();
-			return deferred.promise.then(() => object.$);
+			var promise = deferred.promise.then(() => object.$);
+			Object.defineProperty(promise, '$', { get: () => object.$ });
+			return promise;
 			function collect(object, schema) {
 				if (schema instanceof Array) {
 					var schema = schema[0];

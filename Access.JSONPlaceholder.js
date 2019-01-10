@@ -1,8 +1,7 @@
 var q = require('q');
 var request = require('request-promise-any');
 var request = request.defaults({ json: true });
-var resq = require('.');
-module.exports = endpoint => resq({
+module.exports = endpoint => ({
 	get: (id, type, relation) =>
 		relation ?
 			id instanceof Array ?
@@ -10,6 +9,5 @@ module.exports = endpoint => resq({
 				q.resolve(`/${type}/${id}/${relation}`) :
 			id instanceof Array ?
 				request.get(`${endpoint}/${type}s?${id.map(id => `id=${id}`).join('&')}`).promise() :
-				request.get(`${endpoint}/${type}s/${id}`).promise(),
-	parseReference: object => (component => ({ id: component[1], type: component[0] }))(object.split('.'))
+				request.get(`${endpoint}/${type}s/${id}`).promise()
 });

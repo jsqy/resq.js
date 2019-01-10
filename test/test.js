@@ -1,9 +1,11 @@
 var assert = require('assert');
 var q = require('q');
 require('any-promise/register/q');
-var Memory = require('../Memory');
+var resq = require('..');
+var Memory = require('../Access.Memory');
+var Delimited = require('../Reference.Delimited');
 var data = require('./data');
-var r = Memory(data);
+var r = resq({ access: Memory(data), reference: Delimited('.') });
 it('should get singular', function () {
 	return r.get(1, 'post').then(post => {
 		assert.equal(post, data.post[1]);

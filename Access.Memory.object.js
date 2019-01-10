@@ -1,6 +1,5 @@
 var q = require('q');
-var resq = require('.');
-module.exports = data => resq({
+module.exports = data => ({
 	get: (id, type, relation) =>
 		relation ?
 			id instanceof Array ?
@@ -13,6 +12,5 @@ module.exports = data => resq({
 						object[id[i]] = data[type][id[i]];
 					return object;
 				})()) :
-				q.resolve(data[type][id]),
-	parseReference: object => (component => ({ id: component[1], type: component[0] }))(object.split('.'))
+				q.resolve(data[type][id])
 });

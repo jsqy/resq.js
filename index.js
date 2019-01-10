@@ -1,16 +1,18 @@
 var q = require('q');
-module.exports = config => ({
-	get config() { return config; },
-	set config(value) { config = value; },
+module.exports = ({ access, reference }) => ({
+	get access() { return access; },
+	set access(value) { access = value; },
+	get reference() { return reference; },
+	set reference(value) { reference = value; },
 	get: (id, type, relation) =>
 		id instanceof Array ?
-			config.get(id, type, relation)
+			access.get(id, type, relation)
 				.then(object => id.map(
 					object instanceof Array ?
 						(id, i) => object[i] :
 						id => object[id]
 				)) :
-			config.get(id, type, relation),
+			access.get(id, type, relation),
 	join: schema =>
 		object => {
 			var queue = [];
@@ -41,8 +43,8 @@ module.exports = config => ({
 							} :
 							!schema ?
 								(element, i) => {
-									var reference = config.parseReference(element);
-									enqueue(reference.id, reference.type, undefined, object, i, then);
+									var r = reference.parse(element);
+									enqueue(r.id, r.type, undefined, object, i, then);
 								} :
 								element => {
 									collect(element, schema);
@@ -70,7 +72,7 @@ module.exports = config => ({
 							}
 						else if (!value) (reference => {
 							enqueue(reference.id, reference.type, undefined, object, key, then);
-						})(config.parseReference(object[key]));
+						})(reference.parse(object[key]));
 						else
 							collect(object[key], value);
 					});
@@ -87,7 +89,7 @@ module.exports = config => ({
 					promise[relation] = {};
 					for (var type in request[relation]) {
 						promise[relation][type] =
-							config.get(request[relation][type].map(request => request.id), type, relation);
+							access.get(request[relation][type].map(request => request.id), type, relation);
 						pending++;
 					}
 				}

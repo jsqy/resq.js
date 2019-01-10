@@ -1,5 +1,5 @@
 var q = require('q');
-module.exports = (data, option = { collection: 'array', clone: false }) => (({ map, transform }) => ({
+module.exports = (data, option = {}) => (({ map, transform }) => ({
 	get: (id, type, relation) =>
 		relation ?
 			id instanceof Array ?
@@ -10,11 +10,13 @@ module.exports = (data, option = { collection: 'array', clone: false }) => (({ m
 				q.resolve(transform(data[type][id]))
 }))({
 	map:
-		option.collection == 'array' ?
-			Array.prototype.map :
-			option.collection == 'object' ?
-				mapToObject :
-				undefined,
+		option.collection ?
+			option.collection == 'array' ?
+				Array.prototype.map :
+				option.collection == 'object' ?
+					mapToObject :
+					undefined :
+			Array.prototype.map,
 	transform:
 		option.clone ? clone : identity
 });

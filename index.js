@@ -16,6 +16,7 @@ module.exports = ({ access, reference }) => ({
 	join: schema =>
 		object => {
 			var queue = [];
+			var objectrequest = new Map();
 			var pending = 0;
 			object = { $: object };
 			schema = { $: schema };
@@ -61,7 +62,7 @@ module.exports = ({ access, reference }) => ({
 						if (typeof value == 'string')
 							if (value[0] == '/') {
 								var relation = value.substr(1);
-								enqueue(object.$id, object.$type, relation, object, key, then);
+								enqueue(objectrequest[object].id, objectrequest[object].type, relation, object, key, then);
 							} else {
 								var a = value.match(/\S+/g);
 								if (a[1] == 'as') {
@@ -109,15 +110,11 @@ module.exports = ({ access, reference }) => ({
 							request[relation][type].forEach(
 								object instanceof Array ?
 									(request, i) => {
-										object[i].$id = request.id;
-										object[i].$type = request.type;
-										object[i].$relation = request.relation;
+										objectrequest[object[i]] = request;
 										collect(object[i], request.then);
 									} :
 									request => {
-										object[request.id].$id = request.id;
-										object[request.id].$type = request.type;
-										object[request.id].$relation = request.relation;
+										objectrequest[object[request.id]] = request;
 										collect(object[request.id], request.then);
 									}
 							);

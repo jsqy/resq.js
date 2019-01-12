@@ -111,11 +111,13 @@ module.exports = ({ access, reference }) => ({
 									(request, i) => {
 										object[i].$id = request.id;
 										object[i].$type = request.type;
+										object[i].$relation = request.relation;
 										collect(object[i], request.then);
 									} :
 									request => {
 										object[request.id].$id = request.id;
 										object[request.id].$type = request.type;
+										object[request.id].$relation = request.relation;
 										collect(object[request.id], request.then);
 									}
 							);

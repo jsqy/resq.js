@@ -95,9 +95,8 @@ module.exports = ({ access, reference }) => ({
 				}
 				forEach(promise, (promise, relation) => {
 					forEach(promise, (promise, type) => {
-						promise.finally(() => {
+						promise.then(object => {
 							pending--;
-						}).then(object => {
 							request[relation][type].forEach(
 								object instanceof Array ?
 									(request, i) => {
@@ -122,7 +121,10 @@ module.exports = ({ access, reference }) => ({
 							);
 							flush();
 							if (!pending) deferred.resolve();
-						}, deferred.reject);
+						}, e => {
+							pending--;
+							deferred.reject(e);
+						});
 					});
 				});
 				queue.length = 0;

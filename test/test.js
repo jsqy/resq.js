@@ -31,7 +31,8 @@ it('should join complex', function () {
 				y: "/y"
 			}],
 			b: [['user', {
-				x: "/x"
+				x: "/x",
+				post: ["/post", ['post']]
 			}]]
 		})).then(object => {
 			assert.equal(object.a, data.post[1]);
@@ -40,8 +41,11 @@ it('should join complex', function () {
 			assert.equal(object.a.y, `/post/1/y`);
 			assert.equal(object.b[0], data.user[1]);
 			assert.equal(object.b[0].x, `/user/1/x`);
+			assert.equal(object.b[0].post.length, 1);
+			assert.equal(object.b[0].post[0], data.post[1]);
 			assert.equal(object.b[1], data.user[2]);
 			assert.equal(object.b[1].x, `/user/2/x`);
+			assert.equal(object.b[1].post.length, 0);
 		});
 });
 it('should parse reference', function () {

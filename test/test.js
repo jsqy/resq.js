@@ -1,6 +1,5 @@
 var assert = require('assert');
 var q = require('q');
-require('any-promise/register/q');
 var resq = require('..');
 var Memory = require('../Access.Memory');
 var Delimited = require('../Reference.Delimited');

@@ -6,7 +6,8 @@
   "author": "Jack Lu <jacklu@jacklu.me>",
   "license": "MIT",
   "dependencies": {
-    "q": "*"
+    "q": "*",
+    "deepdash": "panlina/deepdash"
   },
   "devDependencies": {
     "request": "*",

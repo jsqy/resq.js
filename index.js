@@ -88,13 +88,14 @@ module.exports = ({ access, reference }) => ({
 				]);
 				var promise = _.map.call(request, 2, (request, [type, [relation]]) => {
 					var promise = access.get(request.map(request => request.id), type, relation);
+					promise.request = request;
 					pending++;
 					return promise;
 				});
-				_.forEach.call(promise, 2, (promise, [type, [relation]]) => {
+				_.forEach.call(promise, 2, promise => {
 					promise.then(object => {
 						pending--;
-						request[relation][type].forEach(
+						promise.request.forEach(
 							object instanceof Array ?
 								(request, i) => {
 									request.object[request.i] = object[i];
@@ -103,7 +104,7 @@ module.exports = ({ access, reference }) => ({
 									request.object[request.i] = object[request.id];
 								}
 						);
-						request[relation][type].forEach(
+						promise.request.forEach(
 							object instanceof Array ?
 								(request, i) => {
 									objectrequest[object[i]] = request;

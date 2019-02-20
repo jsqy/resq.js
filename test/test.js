@@ -5,17 +5,6 @@ var Memory = require('../Access.Memory');
 var Delimited = require('../Reference.Delimited');
 var data = require('./data');
 var r = resq({ access: Memory(data), reference: Delimited('.') });
-it('should get singular', function () {
-	return r.get(1, 'post').then(post => {
-		assert.equal(post, data.post[1]);
-	});
-});
-it('should get collection', function () {
-	return r.get([1, 2], 'user').then(user => {
-		assert.equal(user[0], data.user[1]);
-		assert.equal(user[1], data.user[2]);
-	});
-});
 it('should join singular', function () {
 	return q.resolve(1).then(r.join('post')).then(post => {
 		assert.equal(post, data.post[1]);

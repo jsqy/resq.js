@@ -4,15 +4,6 @@ module.exports = ({ access, reference }) => ({
 	set access(value) { access = value; },
 	get reference() { return reference; },
 	set reference(value) { reference = value; },
-	get: (id, type, relation) =>
-		id instanceof Array ?
-			access.get(id, type, relation)
-				.then(object => id.map(
-					object instanceof Array ?
-						(id, i) => object[i] :
-						id => object[id]
-				)) :
-			access.get(id, type, relation),
 	join: schema =>
 		object => {
 			var queue = [];

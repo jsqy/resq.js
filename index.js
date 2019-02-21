@@ -71,50 +71,41 @@ module.exports = ({ access, reference }) => ({
 				}
 			}
 			function flush() {
-				var request = group.call(queue, [
-					request => request.relation || "", [
-						request => request.type, []
-					]
-				]);
-				var promise = {};
-				for (var relation in request) {
-					promise[relation] = {};
-					for (var type in request[relation]) {
-						promise[relation][type] =
-							access.get(request[relation][type].map(request => request.id), type, relation);
-						pending++;
-					}
+				var promise = [];
+				for (var [batch, request] of access.batch(queue)) {
+					var p = access.get(batch);
+					promise.push(p);
+					p.request = request;
+					pending++;
 				}
-				forEach(promise, (promise, relation) => {
-					forEach(promise, (promise, type) => {
-						promise.then(object => {
-							pending--;
-							request[relation][type].forEach(
-								object instanceof Array ?
-									(request, i) => {
-										request.object[request.i] = object[i];
-									} :
-									request => {
-										request.object[request.i] = object[request.id];
-									}
-							);
-							request[relation][type].forEach(
-								object instanceof Array ?
-									(request, i) => {
-										objectrequest[object[i]] = request;
-										collect(object[i], request.then);
-									} :
-									request => {
-										objectrequest[object[request.id]] = request;
-										collect(object[request.id], request.then);
-									}
-							);
-							flush();
-							if (!pending) deferred.resolve();
-						}, e => {
-							pending--;
-							deferred.reject(e);
-						});
+				promise.forEach(promise => {
+					promise.then(object => {
+						pending--;
+						promise.request.forEach(
+							object instanceof Array ?
+								(request, i) => {
+									request.object[request.i] = object[i];
+								} :
+								request => {
+									request.object[request.i] = object[request.id];
+								}
+						);
+						promise.request.forEach(
+							object instanceof Array ?
+								(request, i) => {
+									objectrequest[object[i]] = request;
+									collect(object[i], request.then);
+								} :
+								request => {
+									objectrequest[object[request.id]] = request;
+									collect(object[request.id], request.then);
+								}
+						);
+						flush();
+						if (!pending) deferred.resolve();
+					}, e => {
+						pending--;
+						deferred.reject(e);
 					});
 				});
 				queue.length = 0;
@@ -136,26 +127,6 @@ module.exports = ({ access, reference }) => ({
 function forEach(object, callback) {
 	for (var key in object)
 		callback(object[key], key);
-}
-function group(key) {
-	if (key instanceof Array) {
-		if (!key.length) return this;
-		var k = key[0];
-		var g = group.call(this, k);
-		for (var i in g)
-			g[i] = group.call(g[i], key[1]);
-		return g;
-	} else {
-		var object = {};
-		for (var i in this) {
-			var value = this[i];
-			var k = key(value);
-			if (!object[k])
-				object[k] = [];
-			object[k].push(value);
-		}
-		return object;
-	}
 }
 function all(promise) {
 	if (promise.then && typeof promise.then == 'function')

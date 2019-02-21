@@ -1,13 +1,27 @@
 var q = require('q');
+var group = require('./group');
 module.exports = (data, option = {}) => (({ map, transform, relate }) => ({
-	get: (id, type, relation) =>
+	get: ({ id, type, relation }) =>
 		relation ?
-			id instanceof Array ?
-				q.resolve(map.call(id, id => relate(id, type, relation))) :
-				q.resolve(relate(id, type, relation)) :
-			id instanceof Array ?
-				q.resolve(map.call(id, id => transform(data[type][id]))) :
-				q.resolve(transform(data[type][id]))
+			q.resolve(map.call(id, id => relate(id, type, relation))) :
+			q.resolve(map.call(id, id => transform(data[type][id]))),
+	batch: function* (queue) {
+		var request = group.call(queue, [
+			request => request.relation || "", [
+				request => request.type, []
+			]
+		]);
+		for (var relation in request)
+			for (var type in request[relation])
+				yield [
+					{
+						id: request[relation][type].map(request => request.id),
+						type,
+						relation
+					},
+					request[relation][type]
+				];
+	}
 }))({
 	map:
 		option.collection ?

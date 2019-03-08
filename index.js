@@ -8,7 +8,7 @@ module.exports = ({ access, reference }) => ({
 		object => {
 			var queue = [];
 			var objectrequest = new Map();
-			var pending = 0;
+			var pending = new Set();
 			object = { $: object };
 			schema = { $: schema };
 			q.resolve().then(() => {
@@ -18,6 +18,7 @@ module.exports = ({ access, reference }) => ({
 			var deferred = q.defer();
 			var promise = deferred.promise.then(() => object.$);
 			Object.defineProperty(promise, '$', { get: () => object.$ });
+			Object.defineProperty(promise, 'pending', { get: () => pending });
 			return promise;
 			function collect(object, schema) {
 				if (schema instanceof Array) {
@@ -76,11 +77,11 @@ module.exports = ({ access, reference }) => ({
 					var p = access.get(batch);
 					promise.push(p);
 					p.request = request;
-					pending++;
+					pending.add(p);
 				}
 				promise.forEach(promise => {
 					promise.then(object => {
-						pending--;
+						pending.delete(promise);
 						promise.request.forEach(
 							object instanceof Array ?
 								(request, i) => {
@@ -102,9 +103,9 @@ module.exports = ({ access, reference }) => ({
 								}
 						);
 						flush();
-						if (!pending) deferred.resolve();
+						if (!pending.size) deferred.resolve();
 					}, e => {
-						pending--;
+						pending.delete(promise);
 						deferred.reject(e);
 					});
 				});

@@ -76,6 +76,7 @@ module.exports = ({ access, reference }) => ({
 				for (var [batch, request] of access.batch(queue)) {
 					var p = access.get(batch);
 					promise.push(p);
+					p.batch = batch;
 					p.request = request;
 					pending.add(p);
 				}

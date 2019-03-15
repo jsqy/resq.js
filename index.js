@@ -130,15 +130,3 @@ function forEach(object, callback) {
 	for (var key in object)
 		callback(object[key], key);
 }
-function all(promise) {
-	if (promise.then && typeof promise.then == 'function')
-		return promise;
-	if (promise instanceof Array)
-		return q.all(promise.map(all));
-	else {
-		var o = {};
-		for (var i in promise)
-			o[i] = all(promise[i]);
-		return q.all(o);
-	}
-}

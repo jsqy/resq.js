@@ -81,6 +81,11 @@ module.exports = ({ access, reference }) => ({
 					pending.add(p);
 				}
 				promise.forEach(promise => {
+					promise.request.forEach(
+						request => {
+							request.object[request.i] = promise;
+						}
+					);
 					promise.then(object => {
 						pending.delete(promise);
 						promise.request.forEach(

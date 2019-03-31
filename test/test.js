@@ -15,12 +15,12 @@ it('should join complex', function () {
 		.then(r.join({
 			a: ['post', {
 				userId: "user as user",
-				x: "/x",
-				y: "/y"
+				x: "./x",
+				y: "./y"
 			}],
 			b: [['user', {
-				x: "/x",
-				post: ["/post", ['post']]
+				x: "./x",
+				post: ["./post", ['post']]
 			}]]
 		})).then(object => {
 			assert.equal(object.a, data.post[1]);

@@ -52,8 +52,11 @@ module.exports = ({ access, reference }) => ({
 							value = value[0];
 						}
 						if (typeof value == 'string')
-							if (value[0] == '/') {
-								var relation = value.substr(1);
+							if (value.startsWith('/')) {
+								var [, type, id, relation] = value.split('/');
+								enqueue(id, type, relation, object, key, then);
+							} else if (value.startsWith('./')) {
+								var relation = value.substr(2);
 								enqueue(objectrequest[object].id, objectrequest[object].type, relation, object, key, then);
 							} else {
 								var a = value.match(/\S+/g);

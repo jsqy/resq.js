@@ -51,6 +51,8 @@ module.exports = ({ access, reference }) => ({
 							var then = value[1];
 							value = value[0];
 						}
+						if (typeof value == 'function')
+							value = value(object);
 						if (typeof value == 'string')
 							if (value.startsWith('/')) {
 								var [, type, id, relation] = value.split('/');

@@ -14,7 +14,7 @@ it('should join complex', function () {
 	return q.resolve({ a: 1, b: [1, 2] })
 		.then(r.join({
 			a: ['post', {
-				userId: "user as user",
+				user: $this => `/user/${$this.userId}`,
 				x: "./x",
 				y: "./y"
 			}],

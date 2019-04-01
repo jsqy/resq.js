@@ -5,9 +5,7 @@ var group = require('./group');
 module.exports = endpoint => ({
 	get: ({ id, type, relation }) =>
 		relation ?
-			id instanceof Array ?
-				q.resolve(id.map((v, i) => `/${type}/${v}/${relation}`)) :
-				q.resolve(`/${type}/${id}/${relation}`).then(object => [object]) :
+			request.get(`${endpoint}/${type}s/${id}/${relation}s`).promise().then(object => [object]) :
 			id instanceof Array ?
 				request.get(`${endpoint}/${type}s?${id.map(id => `id=${id}`).join('&')}`).promise() :
 				request.get(`${endpoint}/${type}s/${id}`).promise().then(object => [object]),
@@ -19,16 +17,23 @@ module.exports = endpoint => ({
 		]);
 		for (var relation in request)
 			for (var type in request[relation])
-				yield [
-					{
-						id:
-							request[relation][type].length > 1 ?
-								request[relation][type].map(request => request.id) :
-								request[relation][type][0].id,
-						type,
-						relation
-					},
-					request[relation][type]
-				];
+				if (relation)
+					for (var id in request[relation][type])
+						yield [
+							{ id, type, relation },
+							[request[relation][type][id]]
+						];
+				else
+					yield [
+						{
+							id:
+								request[relation][type].length > 1 ?
+									request[relation][type].map(request => request.id) :
+									request[relation][type][0].id,
+							type,
+							relation
+						},
+						request[relation][type]
+					];
 	}
 });

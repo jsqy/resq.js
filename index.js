@@ -29,11 +29,22 @@ module.exports = ({ access, reference }) => ({
 						var then = schema[1];
 						schema = schema[0];
 					}
+					if (typeof schema == 'function')
+						value = value(schema);
 					object.forEach(
 						typeof schema == 'string' ?
-							(element, i) => {
-								enqueue(element, schema, undefined, object, i, then);
-							} :
+							schema.startsWith('/') ?
+								(element, i) => {
+									var [, type, id, relation] = element.split('/');
+									enqueue(id, type, relation, object, i, then);
+								} : schema.startsWith('./') ?
+									(element, i) => {
+										var relation = element.substr(2);
+										enqueue(objectrequest[object].id, objectrequest[object].type, relation, object, i, then);
+									} :
+									(element, i) => {
+										enqueue(element, schema, undefined, object, i, then);
+									} :
 							!schema ?
 								(element, i) => {
 									var r = reference.parse(element);

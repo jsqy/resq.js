@@ -1,7 +1,9 @@
 var q = require('q');
-module.exports = ({ access, reference }) => ({
+module.exports = ({ access, batch, reference }) => ({
 	get access() { return access; },
 	set access(value) { access = value; },
+	get batch() { return batch; },
+	set batch(value) { batch = value; },
 	get reference() { return reference; },
 	set reference(value) { reference = value; },
 	join: schema =>
@@ -83,7 +85,8 @@ module.exports = ({ access, reference }) => ({
 			}
 			function flush() {
 				var promise = [];
-				for (var [batch, request] of access.batch(queue)) {
+				var batchrequest = batch(queue);
+				for (let [batch, request] of batchrequest) {
 					var p = access.get(batch);
 					promise.push(p);
 					p.batch = batch;

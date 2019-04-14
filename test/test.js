@@ -2,9 +2,10 @@ var assert = require('assert');
 var q = require('q');
 var resq = require('..');
 var Memory = require('../Access.Memory');
+var batch = require('../batch.RelationType');
 var Delimited = require('../Reference.Delimited');
 var data = require('./data');
-var r = resq({ access: Memory(data), reference: Delimited('.') });
+var r = resq({ access: Memory(data), batch, reference: Delimited('.') });
 it('should join singular', function () {
 	return q.resolve(1).then(r.join('post')).then(post => {
 		assert.equal(post, data.post[1]);

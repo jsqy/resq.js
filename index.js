@@ -16,6 +16,7 @@ module.exports = ({ access, batch, reference }) => ({
 			q.resolve().then(() => {
 				collect(object, schema);
 				flush();
+				if (!pending.size) deferred.resolve();
 			});
 			var deferred = q.defer();
 			var promise = deferred.promise.then(() => object.$);

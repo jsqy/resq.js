@@ -39,19 +39,19 @@ module.exports = ({ access, batch, reference }) => ({
 							schema.startsWith('/') ?
 								(element, i) => {
 									var [, type, id, relation] = element.split('/');
-									processor.enqueue(id, type, relation, object, i, then);
+									enqueue(id, type, relation, object, i, then);
 								} : schema.startsWith('./') ?
 									(element, i) => {
 										var relation = element.substr(2);
-										processor.enqueue(objectrequest[object].id, objectrequest[object].type, relation, object, i, then);
+										enqueue(objectrequest[object].id, objectrequest[object].type, relation, object, i, then);
 									} :
 									(element, i) => {
-										processor.enqueue(element, schema, undefined, object, i, then);
+										enqueue(element, schema, undefined, object, i, then);
 									} :
 							!schema ?
 								(element, i) => {
 									var r = reference.parse(element);
-									processor.enqueue(r.id, r.type, undefined, object, i, then);
+									enqueue(r.id, r.type, undefined, object, i, then);
 								} :
 								element => {
 									collect(element, schema);
@@ -70,14 +70,14 @@ module.exports = ({ access, batch, reference }) => ({
 						if (typeof value == 'string')
 							if (value.startsWith('/')) {
 								var [, type, id, relation] = value.split('/');
-								processor.enqueue(id, type, relation, object, key, then);
+								enqueue(id, type, relation, object, key, then);
 							} else if (value.startsWith('./')) {
 								var relation = value.substr(2);
-								processor.enqueue(objectrequest[object].id, objectrequest[object].type, relation, object, key, then);
+								enqueue(objectrequest[object].id, objectrequest[object].type, relation, object, key, then);
 							} else
-								processor.enqueue(object[key], value, undefined, object, key, then);
+								enqueue(object[key], value, undefined, object, key, then);
 						else if (!value) (reference => {
-							processor.enqueue(reference.id, reference.type, undefined, object, key, then);
+							enqueue(reference.id, reference.type, undefined, object, key, then);
 						})(reference.parse(object[key]));
 						else
 							collect(object[key], value);
@@ -93,26 +93,6 @@ module.exports = ({ access, batch, reference }) => ({
 						}
 					);
 					promise.then(object => {
-						promise.request.forEach(
-							object instanceof Array ?
-								(request, i) => {
-									request.object[request.i] = object[i];
-								} :
-								request => {
-									request.object[request.i] = object[request.id];
-								}
-						);
-						promise.request.forEach(
-							object instanceof Array ?
-								(request, i) => {
-									objectrequest[object[i]] = request;
-									collect(object[i], request.then);
-								} :
-								request => {
-									objectrequest[object[request.id]] = request;
-									collect(object[request.id], request.then);
-								}
-						);
 						flush();
 						if (!processor.pending.size) deferred.resolve();
 					}, e => {
@@ -120,6 +100,13 @@ module.exports = ({ access, batch, reference }) => ({
 					});
 				});
 				deferred.notify();
+			}
+			function enqueue(id, type, relation, object, i, then) {
+				var request = processor.enqueue(id, type, relation, object, i, data => {
+					object[i] = data;
+					objectrequest[object[i]] = request;
+					collect(data, then);
+				});
 			}
 		}
 });

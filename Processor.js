@@ -5,14 +5,15 @@ class Processor {
 		this.queue = [];
 		this.pending = new Set();
 	}
-	enqueue(id, type, relation, object, i, then) {
+	enqueue(id, type, relation, object, i, resolve, reject) {
 		var request = {
 			id: id,
 			type: type,
 			relation: relation,
 			object,
 			i,
-			then
+			resolve,
+			reject
 		};
 		this.queue.push(request);
 		return request;
@@ -29,8 +30,22 @@ class Processor {
 		promise.forEach(promise => {
 			promise.then(object => {
 				this.pending.delete(promise);
+				promise.request.forEach(
+					object instanceof Array ?
+						(request, i) => {
+							request.resolve(object[i]);
+						} :
+						request => {
+							request.resolve(object[request.id]);
+						}
+				);
 			}, e => {
 				this.pending.delete(promise);
+				promise.request.forEach(
+					request => {
+						request.reject(e);
+					}
+				);
 			});
 		});
 		this.queue.length = 0;
